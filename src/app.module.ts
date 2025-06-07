@@ -13,7 +13,7 @@ import { validationSchema } from './config/validation';
       validationSchema,
     }),
     ExchangeModule,
-    TransactionModule,
+    // TransactionModule,
   ],
 })
 export class AppModule {}

@@ -15,13 +15,13 @@ export class TransactionService {
   private transActions: ITransactionService[] = [];
 
   async createTransaction(amountEUR: number): Promise<ITransactionService> {
-    const rate = await this.exchangeService.getExchangeRate();
-    const amountPLN = parseFloat((amountEUR * rate).toFixed(2));
+    // const rates = await this.exchangeService.getExchangeRates();
+    // const amountPLN = parseFloat((amountEUR * rates).toFixed(2));
     const transaction: ITransactionService = {
       id: Math.random().toString(36),
-      amountEUR,
-      amountPLN,
-      rate,
+      amountEUR: 10,
+      amountPLN: 10,
+      rate: 10,
       timestamp: new Date().toISOString(),
     };
 
