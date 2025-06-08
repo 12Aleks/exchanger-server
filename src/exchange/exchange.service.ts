@@ -30,17 +30,19 @@ export class ExchangeService {
 
   constructor(private readonly configService: ConfigService) {}
 
-  async getExchangeRates(): Promise<{ tradingDate: string; rates: RatesNBP[] }> {
+  async getExchangeRates(): Promise<{ tradingDate: string; rates: RatesNBP[]; previousRates: RatesNBP[] }> {
     const now = Date.now();
 
     if (this.cache && now - this.cache.timestamp < this.TTL) {
       return {
         tradingDate: this.cache.tradingDate,
         rates: this.cache.value,
+        previousRates: await this.getYesterdayRates(),
       };
     }
 
     const API_NBP_RATE = this.configService.get<string>('API_NBP_RATE');
+
     if (!API_NBP_RATE) {
       throw new Error('API_NBP_RATE is not defined in the configuration');
     }
@@ -48,9 +50,9 @@ export class ExchangeService {
     const response = await axios.get<ExchangeRateResponse[]>(API_NBP_RATE);
     const table = response.data[0];
 
-    if (!table || !table.rates?.length) {
-      throw new Error('Invalid exchange rate data');
-    }
+    if (!table || !table.rates?.length) throw new Error('Invalid exchange rate data');
+
+    const previousRates = await this.getYesterdayRates();
 
     this.cache = {
       value: table.rates,
@@ -61,9 +63,30 @@ export class ExchangeService {
     return {
       tradingDate: table.tradingDate,
       rates: table.rates,
+      previousRates,
     };
   }
 
+
+
+  async getYesterdayRates(): Promise<RatesNBP[]> {
+    const date = new Date();
+    date.setDate(date.getDate() - 3);
+    const formatDate = (d: Date) => d.toISOString().split('T')[0];
+    const formattedDate = formatDate(date);
+
+    const API_NBP_RATE_YESTERDAY = this.configService.get<string>('API_NBP_RATE_YESTERDAY');
+    if (!API_NBP_RATE_YESTERDAY) throw new Error('API_NBP_RATE_YESTERDAY not defined');
+     console.log(formattedDate);
+    try {
+      const response = await axios.get<ExchangeRateResponse[]>(`${API_NBP_RATE_YESTERDAY}/${formattedDate}??format=json`);
+      console.log(response.data[0])
+      return response.data[0]?.rates || [];
+
+    } catch (error) {
+      return [];
+    }
+  }
 
 
   async getHistoryRates(){

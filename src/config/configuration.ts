@@ -6,4 +6,5 @@ export default () => ({
   API_NBP_HISTORY_RATE: process.env.API_NBP_HISTORY_RATE,
   API_NBP_RATE: process.env.API_NBP_RATE,
   API_NBP_GOLD: process.env.API_NBP_GOLD,
+  API_NBP_RATE_YESTERDAY: process.env.API_NBP_RATE_YESTERDAY
 })
