@@ -53,6 +53,7 @@ export class ExchangeService {
     if (!table || !table.rates?.length) throw new Error('Invalid exchange rate data');
 
     const previousRates = await this.getYesterdayRates();
+    table.rates.pop();
 
     this.cache = {
       value: table.rates,
@@ -68,31 +69,45 @@ export class ExchangeService {
   }
 
 
-
   async getYesterdayRates(): Promise<RatesNBP[]> {
+    function subtractWeekdays(date: Date, daysToSubtract: number): Date {
+      let daysSubtracted = 0;
+      while (daysSubtracted < daysToSubtract) {
+        date.setDate(date.getDate() - 1);
+        const day = date.getDay();
+        if (day !== 0 && day !== 6) {
+          daysSubtracted++;
+        }
+      }
+      return date;
+    }
+
     const date = new Date();
-    date.setDate(date.getDate() - 3);
+    const result = subtractWeekdays(new Date(date), 1);
+
     const formatDate = (d: Date) => d.toISOString().split('T')[0];
-    const formattedDate = formatDate(date);
+    const formattedDate = formatDate(result);
 
     const API_NBP_RATE_YESTERDAY = this.configService.get<string>('API_NBP_RATE_YESTERDAY');
-    if (!API_NBP_RATE_YESTERDAY) throw new Error('API_NBP_RATE_YESTERDAY not defined');
-     console.log(formattedDate);
-    try {
-      const response = await axios.get<ExchangeRateResponse[]>(`${API_NBP_RATE_YESTERDAY}/${formattedDate}??format=json`);
-      console.log(response.data[0])
-      return response.data[0]?.rates || [];
+    if (!API_NBP_RATE_YESTERDAY) {
+      throw new Error('API_NBP_RATE_YESTERDAY not defined');
+    }
 
+    try {
+      const response = await axios.get<ExchangeRateResponse[]>(`${API_NBP_RATE_YESTERDAY}/${formattedDate}?format=json`);
+      return response.data[0]?.rates || [];
     } catch (error) {
       return [];
     }
   }
 
 
-  async getHistoryRates(){
+  async getHistoryRates(date: number): Promise<RatesNBP[]> {
     const endDate = new Date();
     const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 1);
+    console.log(date)
+    startDate.setDate(endDate.getDate() - date);
+
     const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
     const API_NBP_HISTORY_RATE = this.configService.get<string>('API_NBP_HISTORY_RATE');
@@ -100,15 +115,20 @@ export class ExchangeService {
       throw new Error('API_NBP_HISTORY_RATE is not defined in the configuration');
     }
 
-    const response = await axios.get(`${API_NBP_HISTORY_RATE}/${formatDate(startDate)}/${formatDate(endDate)}/`);
-    return response.data
-
+    try {
+      const response = await axios.get(`${API_NBP_HISTORY_RATE}/${formatDate(startDate)}/${formatDate(endDate)}/`);
+      return response.data;
+    } catch (err: any) {
+      console.error('Error API NBP:', err?.response?.data || err.message);
+      throw new Error('Not to get data');
+    }
   }
 
-async getGoldRates(){
+async getGoldRates(date: number){
   const endDate = new Date();
   const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - 1);
+  startDate.setDate(endDate.getDate() - date);
+
   const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
   const API_NBP_GOLD = this.configService.get<string>('API_NBP_GOLD');
@@ -116,10 +136,13 @@ async getGoldRates(){
     throw new Error('API_NBP_GOLD is not defined in the configuration');
   }
 
+  try {
   const response = await axios.get(`${API_NBP_GOLD}/${formatDate(startDate)}/${formatDate(endDate)}/`);
   return response.data
-
+  } catch (err: any) {
+    console.error('Error API NBP:', err?.response?.data || err.message);
+    throw new Error('Not to get data');
+  }
 }
-
 }
 

@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import {Body, Controller, Get, Post} from '@nestjs/common';
 import { ExchangeService } from './exchange.service';
 import { RatesNBP } from './exchange.service';
 
@@ -11,13 +11,13 @@ export class ExchangeController {
     return this.exchangeService.getExchangeRates();
   }
 
-  @Get('history')
-  async getHistoryRates(){
-    return this.exchangeService.getHistoryRates();
+  @Post('history')
+  async getHistoryRates(@Body('date') date: number){
+    return this.exchangeService.getHistoryRates(date);
   }
 
-  @Get('gold')
-  async getGoldRates(){
-    return this.exchangeService.getGoldRates();
+  @Post('gold')
+  async getGoldRates(@Body('date') date: number){
+    return this.exchangeService.getGoldRates(date);
   }
 }
