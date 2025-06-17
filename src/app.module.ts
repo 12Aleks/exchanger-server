@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ExchangeModule } from './exchange/exchange.module';
-import { TransactionModule } from './transaction/transaction.module';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 import { validationSchema } from './config/validation';
@@ -13,7 +12,6 @@ import { validationSchema } from './config/validation';
       validationSchema,
     }),
     ExchangeModule,
-    // TransactionModule,
   ],
 })
 export class AppModule {}

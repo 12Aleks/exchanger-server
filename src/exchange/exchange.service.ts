@@ -26,7 +26,7 @@ export interface ICachedRates {
 @Injectable()
 export class ExchangeService {
   private cache: ICachedRates | null = null;
-  private readonly TTL = 60 * 1000; // 1 minute
+  private readonly TTL = 6 * 60 * 60 * 1000; // stary timeout 60 * 1000;  1 minute
 
   constructor(private readonly configService: ConfigService) {}
 
